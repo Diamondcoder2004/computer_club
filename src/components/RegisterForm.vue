@@ -33,10 +33,10 @@
 <script>
 import MyInput from "@/components/UI/MyInput.vue";
 import MyButton from "@/components/UI/MyButton.vue";
+import apiClient from "@/services/apiClient"; // ✅ Импорт apiClient
 
 export default {
-  components: {MyButton, MyInput},
-
+  components: { MyButton, MyInput },
   data() {
     return {
       formData: {
@@ -52,25 +52,16 @@ export default {
   methods: {
     async handleSubmit() {
       try {
-        const response = await fetch('http://localhost:3001/user/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(this.formData),
-        });
+        const response = await apiClient.post('/user/register', this.formData);
 
-        const result = await response.json();
-
-        if (response.ok) {
-          alert(result.message || 'Registration successful!');
-          this.$router.push('/'); // Перенаправление на страницу входа
-        } else {
-          alert(result.message || 'Registration failed. Please try again.');
-        }
+        alert(response.data.message || 'Регистрация успешна!');
+        this.$router.push('/'); // Перенаправление на страницу входа
       } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again later.');
+        console.error('Ошибка при регистрации:', error);
+
+        const errorMessage = error.response?.data?.message
+            || 'Ошибка регистрации. Попробуйте позже.';
+        alert(errorMessage);
       }
     },
   },
