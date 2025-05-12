@@ -48,59 +48,40 @@
 
 
 <script>
-  import { defineComponent } from "vue";
-  import MyInput from "@/components/UI/MyInput.vue";
-  import loginService from "@/services/loginService"; // ✅ Импортируем сервис
+import MyInput from "@/components/UI/MyInput.vue";
+import apiClient from "@/services/apiClient"; // ✅ Импорт apiClient
 
-  export default defineComponent({
-  components: { MyInput },
+export default {
+  components: {  MyInput },
   data() {
-  return {
-  credentials: {
-  username: "",
-  password: "",
-},
-  errorMessage: "",
-};
-},
+    return {
+      formData: {
+        firstName: '',
+        lastName: '',
+        username: '',
+        password: '',
+        phone_number: '',
+        email: '',
+      },
+    };
+  },
   methods: {
-    async handleLogin() {
-      this.errorMessage = ""; // Сброс ошибки перед запросом
+    async handleSubmit() {
+      try {
+        const response = await apiClient.post('/user/register', this.formData);
 
-      const result = await loginService.login(this.credentials);
+        alert(response.data.message || 'Регистрация успешна!');
+        this.$router.push('/'); // Перенаправление на страницу входа
+      } catch (error) {
+        console.error('Ошибка при регистрации:', error);
 
-      if (!result.success) {
-        this.errorMessage = result.message;
-        return;
-      }
-
-      const data = result.data;
-
-      if (!data.user) {
-        this.errorMessage = "Сервер не вернул данные пользователя";
-        return;
-      }
-
-      localStorage.setItem("userId", data.user.id);
-      localStorage.setItem("username", data.user.username);
-      localStorage.setItem("firstName", data.user.firstName);
-      localStorage.setItem("lastName", data.user.lastName);
-      localStorage.setItem("role_id", data.user.role_id); // Сохраняем роль
-
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      // Определяем, куда перейти
-      if (data.user.role_id == 3) {
-        this.$router.push({ name: "Home" });
-      } else {
-        this.$router.push({ name: "ManagePage" });
+        const errorMessage = error.response?.data?.message
+            || 'Ошибка регистрации. Попробуйте позже.';
+        alert(errorMessage);
       }
     },
   },
-  });
-
+};
 </script>
 
 
