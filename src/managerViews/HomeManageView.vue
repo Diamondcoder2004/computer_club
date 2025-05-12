@@ -8,6 +8,9 @@
       <router-link to="/report" class="btn-action view-report">Посмотреть отчеты</router-link>
       <router-link to="/manage/create-computer" class="btn-action add-pc">Добавить компьютер</router-link>
       <router-link to="/manage/top-up-balance" class="btn-action recharge">Пополнить баланс пользователя</router-link>
+
+      <!-- Новая кнопка: Добавить товар -->
+      <router-link to="/manage/add-product" class="btn-action add-product">Добавить новый товар</router-link>
     </div>
 
     <!-- Только для менеджера (role_id == 2) -->
@@ -38,6 +41,14 @@ const isRole = (targetRoleId) => {
 </script>
 
 <style scoped>
+
+.add-product {
+  background-color: #8B5E3C; /* Коричневатый цвет */
+}
+.add-product:hover {
+  background-color: #7A4F28;
+}
+
 .home-manage-view {
   padding: 40px;
   max-width: 800px;

@@ -1,5 +1,6 @@
 <template>
   <div class="booking-view">
+    <!-- Шапка -->
     <header class="home-view__header">
       <h1 class="home-title-wrapper">Выберите игровую зону</h1>
       <p class="home-view__subtitle">Выберите зону и количество часов для бронирования</p>
@@ -23,7 +24,7 @@
       </div>
     </main>
 
-    <!-- Шаг 2: Ввод количества часов и начального времени -->
+    <!-- Шаг 2: Ввод времени и количества часов -->
     <main class="time-selection" v-else-if="step === 'time'">
       <h2>Выберите время и продолжительность</h2>
 
@@ -87,20 +88,28 @@
 <script setup>
 import { ref } from 'vue';
 import apiClient from '@/services/apiClient';
-import BookingService from "@/services/BookingService";
 
 const step = ref('zones'); // 'zones', 'time', 'pcs', 'confirmation'
 const zones = ref([]);
 const pcs = ref([]);
 const selectedZone = ref(null);
+const startTime = ref(getCurrentDateTimeLocal());
 const playHours = ref(1); // по умолчанию 1 час
 const confirmationMessage = ref('');
 
+// Минимальное значение для datetime-local
+const minDateTime = getCurrentDateTimeLocal();
 
-const startTime = ref(BookingService.getCurrentDateTimeLocal());
-const minDateTime = new Date().toISOString().slice(0, 16); // сегодня, сейчас
+// Получаем текущее время в формате datetime-local
+function getCurrentDateTimeLocal() {
+  const now = new Date();
+  const offsetMinutes = now.getTimezoneOffset();
+  const correctedDate = new Date(now.getTime() - offsetMinutes * 60 * 1000);
+  return correctedDate.toISOString().slice(0, 16);
+}
+
 // Загрузка зон
-const loadZones = async () => {
+async function loadZones() {
   try {
     const response = await apiClient.get('/api/function/available-zones');
     zones.value = response.data;
@@ -108,24 +117,24 @@ const loadZones = async () => {
     console.error('Ошибка загрузки зон:', error);
     alert('Не удалось загрузить список зон.');
   }
-};
+}
 
 loadZones();
 
 // Переход к выбору времени
-const selectZone = (zone) => {
+function selectZone(zone) {
   selectedZone.value = zone;
   step.value = 'time';
-};
+}
 
-// Загрузка доступных ПК после выбора времени
-const loadAvailablePCs = async () => {
+// Загрузка доступных ПК
+async function loadAvailablePCs() {
   if (!selectedZone.value) return;
 
   try {
     const response = await apiClient.post('/api/function/available-pc', {
       zone_name: selectedZone.value.zone_name,
-      start_time: startTime.value, // теперь передаем из поля ввода
+      start_time: startTime.value,
       play_hours: playHours.value,
     });
 
@@ -142,10 +151,10 @@ const loadAvailablePCs = async () => {
     console.error('Ошибка загрузки ПК:', error);
     alert('Не удалось загрузить доступные компьютеры.');
   }
-};
+}
 
-// Форматируем время
-const formatTime = (datetime) => {
+// Форматируем дату и время
+function formatTime(datetime) {
   const date = new Date(datetime);
   return date.toLocaleString('ru-RU', {
     year: 'numeric',
@@ -154,24 +163,40 @@ const formatTime = (datetime) => {
     hour: '2-digit',
     minute: '2-digit',
   });
-};
+}
 
 // Подтверждение бронирования
-const confirmBooking = (pc) => {
-  confirmationMessage.value = `
-    ${pc.computer_name} в зоне «${selectedZone.value.zone_name}»
-    с ${formatTime(pc.start_time)} на ${pc.play_hours} ч.
-    Итого: ${pc.total_price} ₽
-  `;
-  step.value = 'confirmation';
-};
+async function confirmBooking(pc) {
+  const formattedStartTime = startTime.value.replace('T', ' '); // преобразуем из ISO формата
+
+  try {
+    const response = await apiClient.post('/api/proc/book-computer', {
+      input_computer_name: pc.computer_name,
+      reservation_start_time: formattedStartTime,
+      play_time_hours: playHours.value
+    });
+
+    if (response.status === 200 || response.status === 201) {
+      confirmationMessage.value = `
+        ${pc.computer_name} в зоне «${selectedZone.value.zone_name}»
+        с ${formatTime(startTime.value)} на ${playHours.value} ч.
+        Итого: ${pc.total_price} ₽
+      `;
+      step.value = 'confirmation';
+    }
+  } catch (error) {
+    console.error('Ошибка при бронировании:', error);
+    alert('Не удалось забронировать компьютер. Попробуйте снова.');
+  }
+}
 
 // Сброс к началу
-const resetBooking = () => {
+function resetBooking() {
   step.value = 'zones';
   pcs.value = [];
   playHours.value = 1;
-};
+  startTime.value = getCurrentDateTimeLocal();
+}
 </script>
 
 <style scoped>
@@ -220,6 +245,7 @@ const resetBooking = () => {
 .booking-card {
   background-color: #8B5E3C; /* Темно-коричневый цвет */
 }
+
 .home-view__sections {
   display: flex;
   flex-wrap: wrap;
@@ -227,11 +253,6 @@ const resetBooking = () => {
   gap: 30px;
   margin-top: 40px;
   padding: 0 20px;
-}
-
-.home-view__sections::after {
-  content: '';
-  flex: auto;
 }
 
 .booking-view {
@@ -253,13 +274,6 @@ const resetBooking = () => {
   flex-direction: column;
   align-items: center;
   gap: 20px;
-}
-
-.time-input input {
-  padding: 10px;
-  font-size: 18px;
-  width: 100px;
-  text-align: center;
 }
 
 .btn-next {

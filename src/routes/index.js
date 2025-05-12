@@ -10,6 +10,7 @@ import HomeManageView from "@/managerViews/HomeManageView.vue";
 import ReportsView from "@/managerViews/ReportsView.vue";
 import CreateComputerView from "@/managerViews/CreateComputerView.vue";
 import BalanceView from "@/managerViews/BalanceView.vue";
+import AddProductView from "@/managerViews/AddProductView.vue";
 
 const routes = [
     { path: '/', redirect: '/login' }, // Редирект на страницу входа
@@ -24,7 +25,8 @@ const routes = [
     { path: '/manage',  name: 'ManagePage', component: HomeManageView,  meta: { requiresAuth: true, requiresStaff: true }},
     { path: '/report',  name: 'ReportPage', component: ReportsView,  meta: { requiresAuth: true, allowedRoles: [1, 2] } },
     { path: '/manage/create-computer', name: 'CreateComputerPage', component: CreateComputerView,   meta: { requiresAuth: true, allowedRoles: [1] } },
-    { path: '/manage/top-up-balance', name: 'BalancePage', component: BalanceView ,   meta: { requiresAuth: true, allowedRoles: [1] } }
+    { path: '/manage/top-up-balance', name: 'BalancePage', component: BalanceView ,   meta: { requiresAuth: true, allowedRoles: [1] } },
+    { path: '/manage/add-product', name: 'AddProductPage', component: AddProductView,   meta: { requiresAuth: true, allowedRoles: [1,2] } }
 
 
 

@@ -1,9 +1,10 @@
 <template>
   <div class="home-view">
     <!-- Заголовок -->
-    <div class="home-title-wrapper ">
-    <home-title></home-title>
+    <div class="home-title-wrapper">
+      <home-title></home-title>
     </div>
+
     <!-- Основной заголовок страницы -->
     <div class="home-view__header">
       <h2>Добро пожаловать!</h2>
@@ -28,12 +29,171 @@
         <p>Вкусные напитки и закуски к игре</p>
       </router-link>
     </div>
+
+    <!-- История бронирований -->
+    <div class="report-section">
+      <h3 style="text-align: center;">История бронирований</h3>
+
+      <div v-if="loading" class="loading">Загрузка...</div>
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else class="table-container">
+        <div class="report-table">
+          <table>
+            <thead>
+            <tr>
+              <th>Компьютер</th>
+              <th>Зона</th>
+              <th>Начало</th>
+              <th>Конец</th>
+              <th>Статус</th>
+              <th>Стоимость</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="reservation in reservations" :key="reservation.id">
+              <td>{{ reservation.computers?.computer_name || '-' }}</td>
+              <td>Зона {{ reservation.computers?.zone_id || '-' }}</td>
+              <td>{{ formatDateTime(reservation.start_time) }}</td>
+              <td>{{ formatDateTime(reservation.end_time) }}</td>
+              <td>{{ getStatusLabel(reservation.status) }}</td>
+              <td>{{ reservation.payment_amount }} ₽</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- История покупок -->
+    <div class="report-section">
+      <h3 style="text-align: center;">История покупок</h3>
+
+      <div v-if="purchaseLoading" class="loading">Загрузка...</div>
+      <div v-else-if="purchaseError" class="error-message">{{ purchaseError }}</div>
+      <div v-else class="table-container">
+        <div class="report-table">
+          <table>
+            <thead>
+            <tr>
+              <th>Товар</th>
+              <th>Категория</th>
+              <th>Дата</th>
+              <th>Количество</th>
+              <th>Цена за ед.</th>
+              <th>Сумма</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="purchase in purchases" :key="purchase.id">
+              <td>{{ purchase.products?.product_name || '-' }}</td>
+              <td>{{ purchase.products?.category || '-' }}</td>
+              <td>{{ formatDateTime(purchase.sale_date) }}</td>
+              <td>{{ purchase.quantity }}</td>
+              <td>{{ purchase.products?.price }} ₽</td>
+              <td>{{ purchase.sale_amount }} ₽</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
+
 <script setup>
+import { ref, onMounted } from 'vue';
+import apiClient from '@/services/apiClient.js';
 import HomeTitle from "@/components/HomeTitle.vue";
+
+const reservations = ref([]);
+const purchases = ref([]);
+const loading = ref(true);
+const purchaseLoading = ref(true);
+const error = ref(null);
+const purchaseError = ref(null);
+
+// История бронирований — уже была
+const fetchReservationHistory = async () => {
+  try {
+    const response = await apiClient.get('/api/query/reservation-history');
+    reservations.value = response.data;
+  } catch (err) {
+    error.value = 'Не удалось загрузить историю бронирований.';
+  }
+};
+
+// История покупок — новая функция
+const fetchPurchaseHistory = async () => {
+  try {
+    const response = await apiClient.get('/api/query/purchase-history');
+    purchases.value = response.data;
+  } catch (err) {
+    purchaseError.value = 'Не удалось загрузить историю покупок.';
+  } finally {
+    purchaseLoading.value = false;
+  }
+};
+
+onMounted(async () => {
+  await Promise.all([
+    fetchReservationHistory(),
+    fetchPurchaseHistory()
+  ]);
+  loading.value = false;
+});
+
+// Формат даты
+const formatDateTime = (datetime) => {
+  const date = new Date(datetime);
+  return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+};
+
+// Статус бронирования
+const getStatusLabel = (status) => {
+  switch (status) {
+    case 'Active': return 'Активно';
+    case 'Completed': return 'Завершено';
+    case 'Cancelled': return 'Отменено';
+    default: return status;
+  }
+};
 </script>
+
 <style scoped>
+
+/* Уже были ранее */
+.report-section {
+  margin-top: 60px;
+  padding: 0 20px;
+  margin-bottom: 70px;
+}
+
+.table-container {
+  max-width: 1000px;
+  margin: auto;
+}
+
+.report-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.report-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-table th,
+.report-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+.report-table th {
+  background-color: #f5f5f5;
+}
 
 .home-title-wrapper {
   margin-bottom: 100px;
@@ -58,7 +218,7 @@ import HomeTitle from "@/components/HomeTitle.vue";
   justify-content: center;
   gap: 30px;
   margin-top: 40px;
-  flex-wrap: wrap; /* Для мобильных устройств */
+  flex-wrap: wrap;
 }
 
 .section-card {
@@ -100,5 +260,40 @@ import HomeTitle from "@/components/HomeTitle.vue";
   opacity: 0.9;
 }
 
-</style>
+/* Стили для таблицы (скопированы из другой страницы) */
+.report-section {
+  margin-top: 40px;
+  padding: 0 40px;
+}
 
+.report-table {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.report-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-table th,
+.report-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+.report-table th {
+  background-color: #f5f5f5;
+}
+
+.loading {
+  font-size: 16px;
+  color: #555;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+}
+</style>
