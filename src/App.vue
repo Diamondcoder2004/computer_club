@@ -2,14 +2,10 @@
   <div class="app">
     <router-view>
     </router-view> <!-- Место для отображения маршрутов -->
-
-
   </div>
 </template>
 
 <script>
-
-
 
 export default {
   components: {

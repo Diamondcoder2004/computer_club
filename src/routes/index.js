@@ -29,7 +29,6 @@ const routes = [
     { path: '/manage/add-product', name: 'AddProductPage', component: AddProductView,   meta: { requiresAuth: true, allowedRoles: [1,2] } }
 
 
-
 ];
 
 const router = createRouter({
