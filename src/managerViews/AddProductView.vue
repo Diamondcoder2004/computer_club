@@ -10,5 +10,7 @@ import AddProductForm from "@/components/AddProductForm.vue";
 </script>
 
 <style scoped>
-
+h2{
+  text-align: center;
+}
 </style>

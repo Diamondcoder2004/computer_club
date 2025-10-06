@@ -221,7 +221,9 @@ function resetBooking() {
   border-radius: 5px;
   border: 1px solid #ccc;
 }
-
+.pc-list > h2{
+  text-align: center;
+}
 .section-card {
   width: 280px;
   min-height: 160px;
@@ -261,6 +263,7 @@ function resetBooking() {
 
 .home-title-wrapper {
   margin-bottom: 60px;
+  text-align: center;
 }
 
 .home-view__subtitle {

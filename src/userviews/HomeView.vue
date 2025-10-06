@@ -36,6 +36,9 @@
 
       <div v-if="loading" class="loading">Загрузка...</div>
       <div v-else-if="error" class="error-message">{{ error }}</div>
+      <div v-else-if="reservationsLoaded && reservations.length === 0" class="no-data-message">
+        Бронирований ещё не было
+      </div>
       <div v-else class="table-container">
         <div class="report-table">
           <table>
@@ -65,11 +68,15 @@
     </div>
 
     <!-- История покупок -->
+    <!-- История покупок -->
     <div class="report-section">
       <h3 style="text-align: center;">История покупок</h3>
 
       <div v-if="purchaseLoading" class="loading">Загрузка...</div>
       <div v-else-if="purchaseError" class="error-message">{{ purchaseError }}</div>
+      <div v-else-if="purchasesLoaded && purchases.length === 0" class="no-data-message">
+        Покупок ещё не было
+      </div>
       <div v-else class="table-container">
         <div class="report-table">
           <table>
@@ -112,24 +119,38 @@ const loading = ref(true);
 const purchaseLoading = ref(true);
 const error = ref(null);
 const purchaseError = ref(null);
+const reservationsLoaded = ref(false); // Успешно загружены (даже если пусто)
+const purchasesLoaded = ref(false);
 
 // История бронирований — уже была
 const fetchReservationHistory = async () => {
+  error.value = null; // ← КЛЮЧЕВОЙ МОМЕНТ: сбрасываем ошибку
+  loading.value = true;
   try {
     const response = await apiClient.get('/api/query/reservation-history');
-    reservations.value = response.data;
+    // Даже если response.data — пустой массив, это НЕ ошибка
+    reservations.value = Array.isArray(response.data) ? response.data : [];
+    console.log('Ответ от API:', response.data);
+    console.log('Тип данных:', typeof response.data, Array.isArray(response.data));
   } catch (err) {
+    console.error('Ошибка загрузки бронирований:', err);
     error.value = 'Не удалось загрузить историю бронирований.';
+    reservations.value = [];
+  } finally {
+    loading.value = false;
   }
 };
 
-// История покупок — новая функция
 const fetchPurchaseHistory = async () => {
+  purchaseError.value = null; // ← сбрасываем
+  purchaseLoading.value = true;
   try {
     const response = await apiClient.get('/api/query/purchase-history');
-    purchases.value = response.data;
+    purchases.value = Array.isArray(response.data) ? response.data : [];
   } catch (err) {
+    console.error('Ошибка загрузки покупок:', err);
     purchaseError.value = 'Не удалось загрузить историю покупок.';
+    purchases.value = [];
   } finally {
     purchaseLoading.value = false;
   }
@@ -190,7 +211,12 @@ const getStatusLabel = (status) => {
   padding: 10px;
   text-align: left;
 }
-
+.no-data-message {
+  text-align: center;
+  font-style: italic;
+  color: #777;
+  padding: 20px;
+}
 .report-table th {
   background-color: #f5f5f5;
 }
@@ -289,6 +315,7 @@ const getStatusLabel = (status) => {
 
 .loading {
   font-size: 16px;
+  text-align: center;
   color: #555;
 }
 
