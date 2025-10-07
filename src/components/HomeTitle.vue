@@ -1,7 +1,7 @@
 <template>
   <div class="home-view__title">
     <div class="title__title">
-      <h4>Компьютерный клуб 228</h4>
+      <h4>Компьютерный клуб DiamondPlay</h4>
     </div>
     <div class="title__info">
       <router-link to="/profile" class="btn-profile">
