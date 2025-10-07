@@ -24,14 +24,29 @@ const username = ref('');
 const amount = ref(0);
 
 const rechargeBalance = async () => {
+  // Валидация полей
+  if (!username.value.trim()) {
+    alert('Пожалуйста, введите логин пользователя.');
+    return;
+  }
+
+  if (amount.value <= 0 || !amount.value) {
+    alert('Сумма пополнения должна быть больше 0.');
+    return;
+  }
+
   try {
-    const response = await apiClient.post('/api/proc/top-up-balance', {
-      target_username: username.value,
+    const response = await apiClient.post('/api/proc/top-up-admin', {
+      target_username: username.value.trim(),
       amount: amount.value
     });
 
     alert(`Баланс пользователя "${username.value}" пополнен на ${amount.value} ₽`);
-    console.log(response.data);
+    console.log("Ответ запроса: topUp: ", response.data);
+
+    // Опционально: сброс полей после успешного пополнения
+    username.value = '';
+    amount.value = 0;
   } catch (err) {
     alert('Не удалось пополнить баланс');
     console.error(err);

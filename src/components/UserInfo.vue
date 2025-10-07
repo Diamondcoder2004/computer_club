@@ -1,24 +1,26 @@
 <template>
-  <!-- Информация о пользователе -->
-  <div class="user-info">
-
+  <div v-if="isLoading">Загрузка данных...</div>
+  <div v-else class="user-info">
     <div class="user-info__item">
       <span class="label">Имя:</span>
-      <span class="value">{{ user.firstName }}</span>
+      <span class="value">{{ user.firstName || 'Не указано' }}</span>
     </div>
 
     <div class="user-info__item">
       <span class="label">Фамилия:</span>
-      <span class="value">{{ user.lastName }}</span>
+      <span class="value">{{ user.lastName || 'Не указано' }}</span>
     </div>
+
     <div class="user-info__item">
       <span class="label">Логин:</span>
-      <span class="value">{{ user.username }}</span>
+      <span class="value">{{ user.username || 'Не указан' }}</span>
     </div>
+
     <div class="user-info__item">
       <span class="label">Баланс на карте:</span>
-      <span class="value">{{ user.balance }} ₽</span>
+      <span class="value">{{ user.balance !== undefined ? user.balance + ' ₽' : 'Загрузка...' }}</span>
     </div>
+
     <div class="user-info__item" v-if="user.lastOperationDate">
       <span class="label">Последняя операция:</span>
       <span class="value">{{ formatDate(user.lastOperationDate) }}</span>
@@ -30,6 +32,7 @@
 import { ref, onMounted } from 'vue';
 import Cookies from 'js-cookie';
 import apiClient from '@/services/apiClient'; // Убедитесь, что путь правильный
+const isLoading = ref(true);
 const user = ref({
   id: localStorage.getItem("userId") || '',
   username: localStorage.getItem("username") || '',
@@ -41,6 +44,7 @@ const user = ref({
 });
 
 const loadUserData = async () => {
+  isLoading.value = true;
   try {
     // Загрузка данных из localStorage
     user.value = {
@@ -58,6 +62,7 @@ const loadUserData = async () => {
       const response = await apiClient.get('/api/function/get-balance');
 
       console.log("Статус ответа:", response.status);
+      console.log("Данные о балансе:", response.data);
 
       if (response.status !== 200) {
         throw new Error('Ошибка при загрузке баланса');
@@ -65,9 +70,12 @@ const loadUserData = async () => {
 
       const balanceData = response.data;
 
-      if (balanceData.length > 0) {
-        user.value.balance = balanceData[0].balance;
-        user.value.lastOperationDate = balanceData[0].last_operation_date;
+      // ИСПРАВЛЕНИЕ: работаем с объектом, а не с массивом
+      if (balanceData && balanceData.balance !== undefined) {
+        user.value.balance = balanceData.balance;
+        user.value.lastOperationDate = balanceData.last_operation_date;
+      } else {
+        console.warn('Некорректный формат данных баланса:', balanceData);
       }
     }
 
@@ -81,6 +89,9 @@ const loadUserData = async () => {
   } catch (error) {
     console.error('Ошибка при загрузке данных:', error);
     user.value.balance = 'Ошибка загрузки';
+  }
+  finally {
+    isLoading.value = false;
   }
 };
 
