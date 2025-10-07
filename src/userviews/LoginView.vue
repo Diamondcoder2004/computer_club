@@ -1,6 +1,6 @@
 <template>
   <div class="loginView">
-    <LoginForm>
+    <LoginForm >
 
     </LoginForm>
   </div>
@@ -16,6 +16,7 @@ export default defineComponent({
   components: {LoginForm}
 })
 </script>
+
 <style scoped>
 .loginView {
   display: flex; /* Используем Flexbox для центрирования */
@@ -25,6 +26,5 @@ export default defineComponent({
   background-color: #435165; /* Цвет фона */
   margin: 0; /* Убираем стандартные отступы */
 }
-
 
 </style>

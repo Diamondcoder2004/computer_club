@@ -1,6 +1,6 @@
 <template>
   <div class="registerView">
-  <RegisterForm/>
+  <RegisterForm class="registerForm"></RegisterForm>
   </div>
 </template>
 
@@ -19,7 +19,9 @@ export default {
   display: flex; /* Используем flexbox для центрирования содержимого */
   align-items: center; /* Центрируем по горизонтали */
   justify-content: center; /* Центрируем по вертикали */
+
   height: 100vh; /* Занимает всю высоту экрана */
   background-color: #435165; /* Фоновый цвет */
 }
+
 </style>

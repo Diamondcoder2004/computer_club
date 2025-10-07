@@ -81,6 +81,9 @@ export default {
   font-family: -apple-system, BlinkMacSystemFont, "segoe ui", roboto, oxygen, ubuntu, cantarell, "fira sans", "droid sans", "helvetica neue", Arial, sans-serif;
   font-size: 16px;
 }
+.registerForm form {
+  padding: 30px ; /* Добавляем отступы слева и справа */
+}
 
 .registerForm h1 {
   text-align: center;
@@ -95,7 +98,6 @@ export default {
   margin-left: 20px;
   width: 100%;
   font-weight: bold;
-  margin-bottom: 10px;
   color: #5b6574;
 }
 
@@ -106,13 +108,11 @@ export default {
 
 }
 .registerForm input {
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   margin-left: 20px;
-
 }
 .registerForm button {
   width: 90%;
-  padding: 15px;
   margin-top: 15px;
   background-color: #3274d6;
   border: none;
