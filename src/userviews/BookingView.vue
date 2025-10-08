@@ -101,18 +101,16 @@
 import { ref } from 'vue';
 import apiClient from '@/services/apiClient';
 
-const step = ref('zones'); // 'zones', 'time', 'pcs', 'confirmation'
+const step = ref('zones');
 const zones = ref([]);
 const pcs = ref([]);
 const selectedZone = ref(null);
 const startTime = ref(getCurrentDateTimeLocal());
-const playHours = ref(1); // по умолчанию 1 час
+const playHours = ref(1);
 const confirmationMessage = ref('');
 
-// Минимальное значение для datetime-local
 const minDateTime = getCurrentDateTimeLocal();
 
-// Получаем текущее время в формате datetime-local
 function getCurrentDateTimeLocal() {
   const now = new Date();
   const offsetMinutes = now.getTimezoneOffset();
@@ -120,7 +118,6 @@ function getCurrentDateTimeLocal() {
   return correctedDate.toISOString().slice(0, 16);
 }
 
-// Загрузка зон
 async function loadZones() {
   try {
     const response = await apiClient.get('/api/function/available-zones');
@@ -133,13 +130,11 @@ async function loadZones() {
 
 loadZones();
 
-// Переход к выбору времени
 function selectZone(zone) {
   selectedZone.value = zone;
   step.value = 'time';
 }
 
-// Загрузка доступных ПК
 async function loadAvailablePCs() {
   if (!selectedZone.value) return;
 
@@ -165,7 +160,6 @@ async function loadAvailablePCs() {
   }
 }
 
-// Форматируем дату и время
 function formatTime(datetime) {
   const date = new Date(datetime);
   return date.toLocaleString('ru-RU', {
@@ -177,7 +171,7 @@ function formatTime(datetime) {
   });
 }
 
-// Подтверждение бронирования
+// Подтверждение бронирования с обработкой ошибок
 async function confirmBooking(pc) {
   const formattedStartTime = startTime.value.replace('T', ' ');
 
@@ -188,33 +182,42 @@ async function confirmBooking(pc) {
       play_time_hours: playHours.value
     });
 
-    if (response.status === 200 || response.status === 201) {
-      confirmationMessage.value = `
-        ${pc.computer_name} в зоне «${selectedZone.value.zone_name}»
-        с ${formatTime(startTime.value)} на ${playHours.value} ч.
-        Итого: ${pc.total_price} ₽
-      `;
-      step.value = 'confirmation';
+    // Проверяем, есть ли ошибка в ответе (даже при статусе 200)
+    if (response.data && response.data.error) {
+      throw new Error(response.data.error);
     }
+
+    confirmationMessage.value = `
+      ${pc.computer_name} в зоне «${selectedZone.value.zone_name}»
+      с ${formatTime(startTime.value)} на ${playHours.value} ч.
+      Итого: ${pc.total_price} ₽
+    `;
+    step.value = 'confirmation';
   } catch (error) {
     console.error('Ошибка при бронировании:', error);
 
-    // Обработка специфических ошибок
-    const errorMessage = error.response?.data?.error || '';
+    // Обработка специфических ошибок из функции book_computer
+    const errorMessage = error.response?.data?.error || error.message || '';
 
-    if (errorMessage.toLowerCase().includes('insufficient funds') ||
-        errorMessage.toLowerCase().includes('недостаточно средств')) {
-      alert('Недостаточно средств на счете. Пожалуйста, пополните баланс.');
-    } else if (errorMessage.includes('already booked') ||
-        errorMessage.includes('уже забронирован')) {
-      alert('Этот компьютер уже забронирован на выбранное время. Пожалуйста, выберите другой компьютер или время.');
+    if (errorMessage.includes('Недостаточно средств') || errorMessage.includes('Insufficient balance')) {
+      alert('❌ Недостаточно средств на счете. Пожалуйста, пополните баланс.');
+    } else if (errorMessage.includes('уже забронирован') || errorMessage.includes('already booked')) {
+      alert('❌ Этот компьютер уже забронирован на выбранное время. Пожалуйста, выберите другой компьютер или время.');
+    } else if (errorMessage.includes('в ремонте') || errorMessage.includes('under repair')) {
+      alert('❌ Этот компьютер находится в ремонте. Пожалуйста, выберите другой компьютер.');
+    } else if (errorMessage.includes('не найден') || errorMessage.includes('not found')) {
+      alert('❌ Компьютер не найден. Пожалуйста, обновите список компьютеров.');
+    } else if (errorMessage.includes('недоступен') || errorMessage.includes('not available')) {
+      alert('❌ Компьютер в данный момент недоступен. Пожалуйста, выберите другой компьютер.');
     } else {
-      alert('Не удалось забронировать компьютер. Попробуйте снова.');
+      alert('❌ Не удалось забронировать компьютер. Попробуйте снова.');
     }
+
+    // При ошибке бронирования возвращаемся к списку ПК
+    step.value = 'pcs';
   }
 }
 
-// Сброс к началу
 function resetBooking() {
   step.value = 'zones';
   pcs.value = [];
@@ -222,7 +225,6 @@ function resetBooking() {
   startTime.value = getCurrentDateTimeLocal();
 }
 
-// Получаем класс для карточки зоны (чередование цветов)
 const getZoneCardClass = (index) => {
   const colors = ['zone-card-primary', 'zone-card-secondary', 'zone-card-accent'];
   return colors[index % colors.length];
