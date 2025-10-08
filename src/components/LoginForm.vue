@@ -250,12 +250,12 @@ export default defineComponent({
 }
 
 .error-message {
-  color: #FFD32F2F;
-  background-color: #FFEBEE;
+  color: rgb(0, 0, 0);
+  background-color: rgba(246, 161, 161, 0.88);
   padding: 12px;
   margin: 0 30px 30px;
   border-radius: 8px;
-  border: 1px solid #FFCDD2;
+  border: 1px solid #ff0018;
   text-align: center;
   font-weight: 500;
 }
