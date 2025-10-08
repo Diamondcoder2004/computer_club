@@ -179,7 +179,7 @@ function formatTime(datetime) {
 
 // Подтверждение бронирования
 async function confirmBooking(pc) {
-  const formattedStartTime = startTime.value.replace('T', ' '); // преобразуем из ISO формата
+  const formattedStartTime = startTime.value.replace('T', ' ');
 
   try {
     const response = await apiClient.post('/api/proc/book-computer', {
@@ -198,7 +198,19 @@ async function confirmBooking(pc) {
     }
   } catch (error) {
     console.error('Ошибка при бронировании:', error);
-    alert('Не удалось забронировать компьютер. Попробуйте снова.');
+
+    // Обработка специфических ошибок
+    const errorMessage = error.response?.data?.error || '';
+
+    if (errorMessage.toLowerCase().includes('insufficient funds') ||
+        errorMessage.toLowerCase().includes('недостаточно средств')) {
+      alert('Недостаточно средств на счете. Пожалуйста, пополните баланс.');
+    } else if (errorMessage.includes('already booked') ||
+        errorMessage.includes('уже забронирован')) {
+      alert('Этот компьютер уже забронирован на выбранное время. Пожалуйста, выберите другой компьютер или время.');
+    } else {
+      alert('Не удалось забронировать компьютер. Попробуйте снова.');
+    }
   }
 }
 
