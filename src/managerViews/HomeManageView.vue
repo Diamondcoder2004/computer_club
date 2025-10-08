@@ -16,6 +16,7 @@
     <!-- Только для менеджера (role_id == 2) -->
     <div v-else-if="isRole(2)" class="action-buttons">
       <router-link to="/report" class="btn-action view-report">Посмотреть отчеты</router-link>
+      <router-link to="/manage/add-product" class="btn-action add-product">Добавить новый товар</router-link>
     </div>
 
     <!-- Кнопка "Вернуться к пользователю" -->
