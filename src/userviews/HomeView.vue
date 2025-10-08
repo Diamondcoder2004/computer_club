@@ -406,15 +406,16 @@ const getStatusLabel = (status) => {
 }
 
 .error-message {
-  color: #FFD32F2F;
-  background-color: #FFEBEE;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #FFCDD2;
-  text-align: center;
-  font-weight: 500;
-  margin: 20px 0;
+  color: #d32f2f;
+  background-color: rgba(246, 161, 161, 0.3);
+  padding: 8px 12px;
+  margin: 5px 20px 15px;
+  border-radius: 4px;
+  border: 1px solid #ff0018;
+  font-size: 14px;
+  text-align: left;
 }
+
 
 @media (max-width: 768px) {
   .home-view__sections {
